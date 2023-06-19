@@ -5,13 +5,15 @@ const { loginUser } = require("./LoginController");
 
 const register = async (req, res) => {
   const { ...rest } = req.body;
+  console.log('rest',rest);
   try {
     if (
       !rest.email ||
       !rest.password ||
       !rest.otp ||
       !rest.username ||
-      !rest.phone
+      !rest.phone ||
+      !rest.roles
     ) {
       res.status(400).send({ msg: "Please provide all the values" });
     } else {
@@ -26,15 +28,14 @@ const register = async (req, res) => {
       const userOtp = await Emailveryfi.findOne({
         email: rest.email,
       });
-     // console.log("otp", userOtp.otp);
+      // console.log("otp", userOtp.otp);
 
       if (rest.otp !== userOtp.otp) {
         res.send({ msg: "incorrect otp" });
       } else {
-      
         //hash Password
         const hashPass = await hashPassword(rest.password);
-       // console.log("hash", hashPass);
+        // console.log("hash", hashPass);
         if (getEmail != null && getEmail.email == rest.email) {
           res.status(400).json({ msg: `email is already register` });
         } else if (getPhone != null && getPhone.phone == rest.phone) {
@@ -45,6 +46,7 @@ const register = async (req, res) => {
             username: rest.username,
             phone: rest.phone,
             password: hashPass,
+            roles:rest.roles
           });
           console.log("data", data);
           return res.status(200).json({ data: data });
@@ -107,32 +109,35 @@ const registerUpdateData = async (req, res) => {
   }
 };
 
-const updatePassword = async (req,res)=>{
-  const {...rest} = req.body;
-  try{
-    const emailOtp=await Emailveryfi.findOne({
-      email:rest.email
-    })
-    console.log('email',emailOtp);
-
+const updatePassword = async (req, res) => {
+  const { ...rest } = req.body;
+  try {
     const userData = await Register.findOne({
-      email:rest.email
-    })
-    console.log("userData",userData);
-    if (
-      !rest.email ||
-      !rest.password ||
-      !rest.otp
-    ) {
+      email: rest.email,
+    });
+    console.log("userData", userData);
+    if (!rest.email || !rest.password) {
       res.status(400).send({ msg: "Please provide all the values" });
-    } else{
-
+    } else {
+      console.log("user");
+      const hashPass = await hashPassword(rest.password);
+      const passwordUpdate = await Register.updateOne(
+        { _id: userData._id },
+        {
+          $set: {
+            password: hashPass,
+          },
+        }
+      );
+      res
+        .status(200)
+        .json({ msg: `password successfully update`, data: passwordUpdate });
     }
-  }catch(err){
+  } catch (err) {
     console.log(err);
-    res.status(500).json({msg:`unable to update password`,err})
+    res.status(500).json({ msg: `unable to update password`, err });
   }
-}
+};
 
 const registerDeleteData = async (req, res) => {
   const _id = req.query.id;

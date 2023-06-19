@@ -1,40 +1,45 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const register = new Schema(
+const event = new Schema(
   {
-    username: {
+    marketId: {
+      type: Number,
+    },
+    eventImage: {
       type: String,
       trim: true,
-      required: [true, "Username is required"],
     },
+    date: {
+      type: Date,
+    },
+    time: {},
     email: {
       type: String,
       required: [true, "Email is required"],
-      trim: true,
-      unique: true,
     },
-    profilePhotos: {
+    address: {
       type: String,
       trim: true,
     },
-    phone: { type: Number, trim: true, unique: true },
-    password: {
-      type: String,
-      trim: true,
-      required: [true, "Password is required"],
-    },
-    roles: ['Admin', 'User'],
-    token: {
+    city: {
       type: String,
       trim: true,
     },
+    state: {
+      type: String,
+      trim: true,
+    },
+    country: {
+      type: String,
+      trim: true,
+    },
+    zipCode: { type: Number },
     isDelete: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-const Register = mongoose.model("Register", register);
+const Event = mongoose.model("Event", event);
 
-module.exports = { Register };
+module.exports = { Event };
