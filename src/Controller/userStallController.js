@@ -25,13 +25,12 @@ const getAllUserStall = async (req, res) => {
       {
         $lookup: {
           from: "Stall",
-          let :{StallType:"$stallType"},
           localField: "stallId",
           foreignField: "_id",
-          as: "stallType",
+          as: "Stalldetails",
         },
       },
-    ]);
+    ])
 
     res
       .status(200)

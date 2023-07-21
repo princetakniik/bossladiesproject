@@ -1,5 +1,5 @@
 const { Register } = require("../Model/RegisterModel");
-const { UserDetails } = require("../Model/userAddressModel");
+const { UserAddress } = require("../Model/userAddressModel");
 
 const userDetails = async (req, res) => {
   const { ...rest } = req.body;
@@ -9,7 +9,7 @@ const userDetails = async (req, res) => {
   });
   console.log("userregister", userRegister._id.valueOf().toString());
   try {
-    const userData = await UserDetails.create({
+    const userData = await UserAddress.create({
       email: rest.email.toLowerCase(),
       Additional: rest.Additional,
       country: rest.country,
@@ -31,9 +31,17 @@ const userDetails = async (req, res) => {
 
 const getUserAll = async (req, res) => {
   try {
-    const userData = await UserDetails.find({
-      isDelete: false,
-    });
+    const userData = await Register.aggregate([
+      {
+        $lookup: {
+          from: "useraddresses",
+          localField: "email",
+          foreignField: "email",
+          as: "UserAddress",
+        },
+      },
+    ]);
+
     res.status(200).json({ msg: `user details all `, data: userData });
   } catch (err) {
     console.log(err);
@@ -42,11 +50,23 @@ const getUserAll = async (req, res) => {
 };
 
 const getDataById = async (req, res) => {
+  const { email } = req.query;
   try {
-    const userData = await UserDetails.findOne({
-      userId: req.query._id,
-      isDelete: false,
-    });
+    const userData = await Register.aggregate([
+      { $match: { email: email } },
+      {
+        $lookup: {
+          from: "useraddresses",
+          localField: "email",
+          foreignField: "email",
+          as: "UserAddress",
+        },
+      },
+      {
+        $unwind: "$UserAddress",
+      },
+    ]);
+
     res.status(200).json({ msg: `user data find by user id `, data: userData });
   } catch (err) {
     console.log(err);
@@ -56,7 +76,7 @@ const getDataById = async (req, res) => {
 
 const getAllmembership = async (req, res) => {
   try {
-    const membershipUser = await db.UserDetails.find({
+    const membershipUser = await db.UserAddress.find({
       isDelete: false,
     });
     console.log("membershipUser", membershipUser);
@@ -67,87 +87,93 @@ const getAllmembership = async (req, res) => {
 };
 
 const updateuserdetails = async (req, res) => {
-  const {...rest} =req.body
+  const { ...rest } = req.body;
   try {
-    const updateUser = await UserDetails.updateOne(
-      { userId: req.query.userId},
+    const updateUser = await UserAddress.updateOne(
+      { userId: req.query.userId },
       {
         $set: {
-      profilePhotos: rest.profilePhotos,
-      username: rest.username,
-      phone: rest.phone,
-      Additional: rest.Additional,
-      country: rest.country,
-      state: rest.state,
-      city: rest.city,
-      address: rest.address,
-      zipCode: rest.zipCode,
-      startDate: rest.startDate,
-      endDate: rest.endDate,
+          profilePhotos: rest.profilePhotos,
+          username: rest.username,
+          phone: rest.phone,
+          Additional: rest.Additional,
+          country: rest.country,
+          state: rest.state,
+          city: rest.city,
+          address: rest.address,
+          zipCode: rest.zipCode,
+          startDate: rest.startDate,
+          endDate: rest.endDate,
         },
       }
     );
-    res.status(200).json({msg:`user details update successfully`,data:updateUser})
+    res
+      .status(200)
+      .json({ msg: `user details update successfully`, data: updateUser });
   } catch (err) {
     console.log(err);
     res.status(500).json({ msg: `user data is not update` });
   }
 };
 
-const getActiveUser=async(req,res)=>{
-  try{
-    const userData = await UserDetails.find({
+const getActiveUser = async (req, res) => {
+  try {
+    const userData = await UserAddress.find({
       isDelete: false,
-      isActive:true
+      isActive: true,
     });
-    res.status(200).json({msg:`user active data`,data:userData})
-  }catch(err){
+    res.status(200).json({ msg: `user active data`, data: userData });
+  } catch (err) {
     console.log(err);
-    res.status(500).json({msg:`active user data not found `,err})
+    res.status(500).json({ msg: `active user data not found `, err });
   }
-}
+};
 
-const getInactiveUser=async(req,res)=>{
-  try{
-    const userData = await UserDetails.find({
+const getInactiveUser = async (req, res) => {
+  try {
+    const userData = await UserAddress.find({
       isDelete: false,
-      isActive:false
+      isActive: false,
     });
-    res.status(200).json({msg:`user in active data`,data:userData})
-  }catch(err){
+    res.status(200).json({ msg: `user in active data`, data: userData });
+  } catch (err) {
     console.log(err);
-    res.status(500).json({msg:`Inactive user data not found `,err})
+    res.status(500).json({ msg: `Inactive user data not found `, err });
   }
-}
+};
 
-const updateActive=async(req,res)=>{
-  const {...rest} = req.body
-  try{
-    const updateUser = await UserDetails.updateOne(
-      { userId: req.query.userId},
+const updateActive = async (req, res) => {
+  const { ...rest } = req.body;
+  try {
+    const updateUser = await UserAddress.updateOne(
+      { userId: req.query.userId },
       {
-        $set: {isActive:rest.isActive,}
-       } )
-       res.status(200).json({msg:`update user status ${rest.isActive}`,data:updateUser})
-  }catch(err){
+        $set: { isActive: rest.isActive },
+      }
+    );
+    res
+      .status(200)
+      .json({ msg: `update user status ${rest.isActive}`, data: updateUser });
+  } catch (err) {
     console.log(err);
-    res.status(500).json({msg:`Inactive user data not found `,err})
+    res.status(500).json({ msg: `Inactive user data not found `, err });
   }
-}
+};
 
-const deleteUser=async(req,res)=>{
-  try{
-    const updateUser = await UserDetails.updateOne(
-      { userId: req.query.userId},
+const deleteUser = async (req, res) => {
+  try {
+    const updateUser = await UserAddress.updateOne(
+      { userId: req.query.userId },
       {
-        $set: {isDelete: true,}
-       } )
-       res.status(200).json({msg:`user data is delete ..`,data:updateUser})
-  }catch(err){
+        $set: { isDelete: true },
+      }
+    );
+    res.status(200).json({ msg: `user data is delete ..`, data: updateUser });
+  } catch (err) {
     console.log(err);
-    res.status(500).json({msg:`Inactive user data not found `,err})
+    res.status(500).json({ msg: `Inactive user data not found `, err });
   }
-}
+};
 module.exports = {
   userDetails,
   getUserAll,
@@ -158,5 +184,4 @@ module.exports = {
   updateuserdetails,
   updateActive,
   deleteUser,
-
 };
