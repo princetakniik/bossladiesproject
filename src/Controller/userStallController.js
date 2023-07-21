@@ -1,3 +1,4 @@
+const { Stall } = require("../Model/stallModel");
 const { UserStall } = require("../Model/userStallModel");
 
 const insertUserStall = async (req, res) => {
@@ -21,20 +22,24 @@ const insertUserStall = async (req, res) => {
 
 const getAllUserStall = async (req, res) => {
   try {
-    const userStallData = await UserStall.aggregate([
-      {
-        $lookup: {
-          from: "Stall",
-          localField: "stallId",
-          foreignField: "_id",
-          as: "Stalldetails",
-        },
-      },
-    ])
+    // const userStallData = await Stall.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: "userstalls",
+    //       localField: "_id",
+    //       foreignField: "(stallId)",
+    //       as: "UserAddress",
+    //     },
+    //   },
+    // ]);
+//let result=[]
+    const stallId = await Stall.find();
+    const userstallId = await UserStall.find();
 
+    const result=stallId.filter((e)=> userstallId.some((f)=>e._id==f.stallId))
     res
       .status(200)
-      .json({ msg: `all UserStall data found ..`, data: userStallData });
+      .json({ msg: `all UserStall data found ..`, data: result });
   } catch (err) {
     console.log(err);
     res.status(500).json({ msg: `all UserStall data not found ..`, err });
